@@ -122,9 +122,35 @@ async function run() {
           {
             $unwind: "$menuItemIds",
           },
+          {
+            $lookup: {
+              from: "menu",
+              localField: "menuItemIds",
+              foreignField: "_id",
+              as: "menuItems",
+            },
+          },
+          {
+            $unwind: "$menuItems",
+          },
+          {
+            $group: {
+              _id: "$menuItems.category",
+              quantity: { $sum: 1 },
+              totalRevenue: { $sum: "$menuItems.price" },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              category: "$_id",
+              quantity: "$quantity",
+              revenue: "$totalRevenue",
+            },
+          },
         ])
         .toArray();
-      res.send({ result});
+      res.send(result);
     });
     // admin validation methods
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
